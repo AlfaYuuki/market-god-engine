@@ -9,9 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "framer-motion": "^11.0.0",
-    "react": "^19.3.0-canary-e71a6393-20260702",
-    "react-dom": "^19.3.0-canary-e71a6393-20260702",
+    "framer-motion": "^11.18.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "recharts": "^2.9.0"
   },
   "devDependencies": {

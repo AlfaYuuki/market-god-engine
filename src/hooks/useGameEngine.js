@@ -11,14 +11,19 @@ const BUILDS = [
   { id: 'Whale', label: 'Whale', description: 'Huge price movement', theme: '🐋' }
 ];
 
-const EVENTS = ['Bull', 'Bear', 'Liquidity Raid', 'Black Swan'];
+const EVENTS = [
+  { id: 'Bull', label: '📈 Bull', description: 'Bull rally pushes price upward.' },
+  { id: 'Bear', label: '📉 Bear', description: 'Bear pressure pulls the market down.' },
+  { id: 'Liquidity Raid', label: '⚠ Liquidity Raid', description: 'Market depth collapses abruptly.' },
+  { id: 'Black Swan', label: '🌑 Black Swan', description: 'Unexpected shock shakes the system.' }
+];
 
 const ACHIEVEMENTS = [
-  { id: 'Market God', condition: (score) => score >= 10, description: 'You dominate the market.' },
-  { id: 'Combo Master', condition: (combo) => combo >= 12, description: 'A flawless streak.' },
-  { id: 'Bull King', condition: (score) => score >= 5, description: 'Riding the bull wave.' },
-  { id: 'Survivor', condition: (score) => score >= 0, description: 'Still in control.' },
-  { id: 'Whale', condition: (_, buildId) => buildId === 'Whale', description: 'Massive market power.' }
+  { id: 'Market God', condition: ({ score }) => score >= 10, description: 'You dominate the market.' },
+  { id: 'Combo Master', condition: ({ combo }) => combo >= 12, description: 'A flawless streak.' },
+  { id: 'Bull King', condition: ({ score }) => score >= 5, description: 'Riding the bull wave.' },
+  { id: 'Survivor', condition: ({ score }) => score >= 0, description: 'Still in control.' },
+  { id: 'Whale', condition: ({ buildId }) => buildId === 'Whale', description: 'Massive market power.' }
 ];
 
 const START_STATE = {
@@ -34,11 +39,36 @@ const START_STATE = {
   activeTraderIndex: 0,
   leaderEvent: 'Bull',
   bossActive: null,
-  ending: null
+  ending: null,
+  traders: tradersData.map((trader) => ({ ...trader, memory: [] }))
 };
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function getDialogue(trader) {
+  const counts = trader.memory.reduce((acc, event) => {
+    acc[event] = (acc[event] || 0) + 1;
+    return acc;
+  }, {});
+
+  if (counts.Bull >= 3) return 'FOMO has taken over.';
+  if (counts.Bear >= 2) return 'Too many bears, market PTSD.';
+  if ((counts['Liquidity Raid'] || 0) >= 2) return 'Liquidity is being hunted.';
+  if ((counts['Black Swan'] || 0) >= 1) return 'The model did not see that coming.';
+
+  const latest = trader.memory[0];
+  if (latest && dialogueMap[latest]) {
+    const options = dialogueMap[latest];
+    return options[trader.memory.length % options.length];
+  }
+
+  return 'Watching the data stream.';
+}
+
+function randomFactor() {
+  return 0.92 + Math.random() * 0.16;
 }
 
 export function useGameEngine() {
@@ -55,7 +85,8 @@ export function useGameEngine() {
   const [leaderEvent, setLeaderEvent] = useState(START_STATE.leaderEvent);
   const [bossActive, setBossActive] = useState(START_STATE.bossActive);
   const [ending, setEnding] = useState(START_STATE.ending);
-  const [traders, setTraders] = useState(tradersData);
+  const [traders, setTraders] = useState(START_STATE.traders);
+  const [recentDelta, setRecentDelta] = useState(null);
 
   useEffect(() => {
     const saved = loadGame();
@@ -68,40 +99,83 @@ export function useGameEngine() {
       setSelectedZone(zone);
       setSelectedBuild(build);
       setHistory(saved.history.length ? saved.history : START_STATE.history);
+      setUnlockedAchievements(saved.unlockedAchievements ?? []);
+      setActiveTraderIndex(saved.activeTraderIndex ?? 0);
+      setLeaderEvent(saved.leaderEvent ?? 'Bull');
+      setTraders(saved.traders?.length ? saved.traders : START_STATE.traders);
     }
   }, []);
 
   useEffect(() => {
-    saveGame({ price, combo, score, selectedZone, selectedBuild, history });
-  }, [price, combo, score, selectedZone, selectedBuild, history]);
+    saveGame({
+      price,
+      combo,
+      score,
+      selectedZone,
+      selectedBuild,
+      history,
+      unlockedAchievements,
+      activeTraderIndex,
+      leaderEvent,
+      traders
+    });
+  }, [price, combo, score, selectedZone, selectedBuild, history, unlockedAchievements, activeTraderIndex, leaderEvent, traders]);
+
+  useEffect(() => {
+    if (!bossActive) return undefined;
+    const timeout = window.setTimeout(() => setBossActive(null), 2400);
+    return () => window.clearTimeout(timeout);
+  }, [bossActive]);
 
   const tradersWithDialogue = useMemo(
     () => traders.map((trader) => ({
       ...trader,
-      lastEvent: trader.memory[0] || 'None',
-      dialogue: dialogueMap[trader.memory[0]]?.[Math.floor(Math.random() * 3)] ?? 'Watching the data stream.'
+      lastEvent: trader.memory[0] || 'Calibrating',
+      dialogue: getDialogue(trader)
     })),
     [traders]
   );
 
   const activeTrader = tradersWithDialogue[activeTraderIndex];
 
-  const eventOptions = EVENTS.map((type) => ({
-    id: type,
-    label: type,
-    description: `${type} market impact.`
+  const eventOptions = EVENTS.map((event) => ({
+    id: event.id,
+    label: event.label,
+    description: event.description
   }));
+
+  const awardAchievements = ({ score: currentScore, combo: currentCombo, buildId }) => {
+    const earned = ACHIEVEMENTS.filter((achievement) => {
+      if (unlockedAchievements.includes(achievement.id)) return false;
+      return achievement.condition({ score: currentScore, combo: currentCombo, buildId });
+    }).map((achievement) => achievement.id);
+
+    if (earned.length) {
+      setUnlockedAchievements((prev) => [...prev, ...earned]);
+      setAchievementQueue((prev) => [...prev, ...earned]);
+    }
+  };
+
+  useEffect(() => {
+    awardAchievements({ score, combo, buildId: selectedBuild.id });
+  }, [score, combo, selectedBuild.id]);
 
   const triggerEvent = (type) => {
     const impact = eventImpact(type, selectedZone.multiplier, selectedBuild.id);
-    const nextPrice = clamp(price + impact.price, 100, 9999);
-    const nextCombo = Math.max(0, combo + impact.combo);
-    const nextScore = score + impact.score;
-    const nextHistory = [...history, { price: nextPrice, label: type }].slice(-20);
-    const nextLog = [{ type, impact, time: Date.now() }, ...eventLog].slice(0, 5);
-    const nextTraders = traders.map((trader, index) => ({
+    const adjusted = {
+      price: Math.round(impact.price * randomFactor()),
+      combo: Math.round(impact.combo * randomFactor()),
+      score: Math.round(impact.score * randomFactor())
+    };
+
+    const nextPrice = clamp(price + adjusted.price, 100, 9999);
+    const nextCombo = Math.max(0, combo + adjusted.combo);
+    const nextScore = score + adjusted.score;
+    const nextHistory = [...history, { price: nextPrice, label: `${type}` }].slice(-20);
+    const nextLog = [{ type, impact: adjusted, time: Date.now() }, ...eventLog].slice(0, 5);
+    const updatedTraders = traders.map((trader) => ({
       ...trader,
-      memory: index === activeTraderIndex ? [type, ...trader.memory].slice(0, 5) : trader.memory
+      memory: [type, ...trader.memory].slice(0, 5)
     }));
 
     setPrice(nextPrice);
@@ -112,17 +186,10 @@ export function useGameEngine() {
     setLeaderEvent(type);
     setBossActive(type === 'Liquidity Raid' ? 'JPOW' : type === 'Black Swan' ? 'BLACK SWAN' : null);
     setActiveTraderIndex((prev) => (prev + 1) % traders.length);
-    setTraders(nextTraders);
+    setTraders(updatedTraders);
+    setRecentDelta(adjusted.score);
 
-    const earned = ACHIEVEMENTS.filter((achievement) => {
-      if (unlockedAchievements.includes(achievement.id)) return false;
-      return achievement.condition(type === 'Combo Master' ? nextCombo : nextScore, selectedBuild.id, nextCombo);
-    }).map((achievement) => achievement.id);
-
-    if (earned.length) {
-      setUnlockedAchievements((prev) => [...prev, ...earned]);
-      setAchievementQueue((prev) => [...prev, ...earned]);
-    }
+    awardAchievements({ score: nextScore, combo: nextCombo, buildId: selectedBuild.id });
 
     if (nextScore >= 10) setEnding({ title: 'GOD', subtitle: 'You control the market.', icon: '👑' });
     else if (nextScore >= 5) setEnding({ title: 'RICH', subtitle: 'You mastered profit.', icon: '💰' });
@@ -131,20 +198,25 @@ export function useGameEngine() {
     else setEnding(null);
   };
 
+  const selectZone = (zone) => setSelectedZone(zone);
+  const selectBuild = (build) => setSelectedBuild(build);
+
   const resetGame = () => {
-    setPrice(2000);
-    setCombo(0);
-    setScore(0);
-    setSelectedZone(zonesData[0]);
-    setSelectedBuild(BUILDS[1]);
-    setHistory([{ price: 2000, label: 'Start' }]);
-    setEventLog([]);
-    setAchievementQueue([]);
-    setUnlockedAchievements([]);
-    setActiveTraderIndex(0);
-    setLeaderEvent('Bull');
-    setBossActive(null);
-    setEnding(null);
+    setPrice(START_STATE.price);
+    setCombo(START_STATE.combo);
+    setScore(START_STATE.score);
+    setSelectedZone(START_STATE.selectedZone);
+    setSelectedBuild(START_STATE.selectedBuild);
+    setHistory(START_STATE.history);
+    setEventLog(START_STATE.eventLog);
+    setAchievementQueue(START_STATE.achievementQueue);
+    setUnlockedAchievements(START_STATE.unlockedAchievements);
+    setActiveTraderIndex(START_STATE.activeTraderIndex);
+    setLeaderEvent(START_STATE.leaderEvent);
+    setBossActive(START_STATE.bossActive);
+    setEnding(START_STATE.ending);
+    setTraders(START_STATE.traders);
+    setRecentDelta(null);
   };
 
   return {
@@ -165,9 +237,10 @@ export function useGameEngine() {
     builds: BUILDS,
     events: eventOptions,
     traders,
+    recentDelta,
     triggerEvent,
-    selectZone: setSelectedZone,
-    selectBuild: setSelectedBuild,
+    selectZone,
+    selectBuild,
     setAchievementQueue,
     resetGame
   };
