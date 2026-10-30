@@ -4,7 +4,10 @@ export function loadGame() {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !Number.isFinite(parsed.price) || !Array.isArray(parsed.history)) return null;
+    return parsed;
   } catch (error) {
     return null;
   }
@@ -19,6 +22,7 @@ export function saveGame(state) {
     zoneId: state.selectedZone.id,
     buildId: state.selectedBuild.id,
     history: state.history,
+    eventLog: state.eventLog ?? [],
     unlockedAchievements: state.unlockedAchievements ?? [],
     activeTraderIndex: state.activeTraderIndex ?? 0,
     leaderEvent: state.leaderEvent ?? 'Bull',
