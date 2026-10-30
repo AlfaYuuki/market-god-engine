@@ -18,7 +18,15 @@ export function saveGame(state) {
     score: state.score,
     zoneId: state.selectedZone.id,
     buildId: state.selectedBuild.id,
-    history: state.history
+    history: state.history,
+    unlockedAchievements: state.unlockedAchievements ?? [],
+    activeTraderIndex: state.activeTraderIndex ?? 0,
+    leaderEvent: state.leaderEvent ?? 'Bull',
+    traders: state.traders ?? []
   };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch (error) {
+    // Storage can be unavailable or full; the simulation should remain playable.
+  }
 }
