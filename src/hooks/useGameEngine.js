@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import tradersData from '../data/traders';
 import zonesData from '../data/zones';
 import dialogueMap from '../data/dialogues';
@@ -101,10 +101,15 @@ export function useGameEngine() {
       setSelectedBuild(build);
       setHistory(saved.history.length ? saved.history : START_STATE.history);
       setEventLog(Array.isArray(saved.eventLog) ? saved.eventLog : START_STATE.eventLog);
-      setUnlockedAchievements(saved.unlockedAchievements ?? []);
+      setUnlockedAchievements(Array.isArray(saved.unlockedAchievements) ? saved.unlockedAchievements : START_STATE.unlockedAchievements);
       setActiveTraderIndex(Number.isInteger(saved.activeTraderIndex) ? ((saved.activeTraderIndex % START_STATE.traders.length) + START_STATE.traders.length) % START_STATE.traders.length : 0);
       setLeaderEvent(saved.leaderEvent ?? 'Bull');
-      setTraders(Array.isArray(saved.traders) && saved.traders.length === START_STATE.traders.length ? saved.traders : START_STATE.traders);
+      setTraders(START_STATE.traders.map((trader, index) => ({
+        ...trader,
+        memory: Array.isArray(saved.traders?.[index]?.memory)
+          ? saved.traders[index].memory.filter((event) => typeof event === 'string').slice(0, 5)
+          : []
+      })));
     }
     setHydrated(true);
   }, []);
@@ -122,9 +127,7 @@ export function useGameEngine() {
       unlockedAchievements,
       activeTraderIndex,
       leaderEvent,
-      traders,
-      unlockedAchievements,
-      activeTraderIndex
+      traders
     });
   }, [hydrated, price, combo, score, selectedZone, selectedBuild, history, eventLog, unlockedAchievements, activeTraderIndex, leaderEvent, traders]);
 
