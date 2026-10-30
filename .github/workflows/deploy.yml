@@ -31,7 +31,10 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install locked dependencies
+      - name: Synchronize dependency lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Install dependencies cleanly
         run: npm ci
 
       - name: Build production site
