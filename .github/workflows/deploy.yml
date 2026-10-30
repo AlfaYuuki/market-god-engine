@@ -22,6 +22,9 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Validate standalone JavaScript
+        run: node --check game.js
+
       - name: Prepare standalone site
         run: |
           mkdir -p dist
