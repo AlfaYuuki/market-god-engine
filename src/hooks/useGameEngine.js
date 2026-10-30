@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import tradersData from '../data/traders';
 import zonesData from '../data/zones';
 import dialogueMap from '../data/dialogues';
@@ -22,7 +22,7 @@ const ACHIEVEMENTS = [
   { id: 'Market God', condition: ({ score }) => score >= 10, description: 'You dominate the market.' },
   { id: 'Combo Master', condition: ({ combo }) => combo >= 12, description: 'A flawless streak.' },
   { id: 'Bull King', condition: ({ score }) => score >= 5, description: 'Riding the bull wave.' },
-  { id: 'Survivor', condition: ({ score }) => score >= 0, description: 'Still in control.' },
+  { id: 'Survivor', condition: ({ score }) => score > 0, description: 'Still in control.' },
   { id: 'Whale', condition: ({ buildId }) => buildId === 'Whale', description: 'Massive market power.' }
 ];
 
@@ -87,6 +87,7 @@ export function useGameEngine() {
   const [ending, setEnding] = useState(START_STATE.ending);
   const [traders, setTraders] = useState(START_STATE.traders);
   const [recentDelta, setRecentDelta] = useState(null);
+  const skipInitialSave = useRef(true);
 
   useEffect(() => {
     const saved = loadGame();
@@ -107,6 +108,10 @@ export function useGameEngine() {
   }, []);
 
   useEffect(() => {
+    if (skipInitialSave.current) {
+      skipInitialSave.current = false;
+      return;
+    }
     saveGame({
       price,
       combo,
@@ -117,7 +122,9 @@ export function useGameEngine() {
       unlockedAchievements,
       activeTraderIndex,
       leaderEvent,
-      traders
+      traders,
+      unlockedAchievements,
+      activeTraderIndex
     });
   }, [price, combo, score, selectedZone, selectedBuild, history, unlockedAchievements, activeTraderIndex, leaderEvent, traders]);
 
