@@ -27,7 +27,7 @@ The game uses browser Canvas for its chart and Local Storage for saves. If brows
 - `styles.css` — responsive visual system, effects and motion
 - `game.js` — game state, market engine, rendering and persistence
 
-No third-party JavaScript libraries are required. The optional Google Fonts import falls back to system fonts if the network is unavailable.
+No third-party libraries, remote fonts, CDNs or network requests are required.
 
 ## GitHub Pages
 
