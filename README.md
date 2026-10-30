@@ -1,45 +1,46 @@
-# Market God Engine
+# Market God Engine — Standalone Edition
 
-A dark futuristic trading terminal game built with React, Vite, TailwindCSS, Framer Motion, and Recharts. Manage market events, select trading builds, navigate global zones, and survive boss encounters in a neon-lit simulation.
+A browser-native market simulation built with **HTML, CSS and vanilla JavaScript**.
 
-## Features
+## Run it
 
-- Live animated price chart powered by Recharts
-- Four market events with unique impacts: Bull, Bear, Liquidity Raid, Black Swan
-- Five city trading zones with distinct multipliers
-- Three trader builds: Scalper, Swing Trader, Whale
-- AI traders with memory-driven dialogue
-- Boss overlays for Liquidity Raid and Black Swan
-- Achievement unlock system and dynamic endings
-- Persistent save system using LocalStorage
-- Responsive neon terminal UI with smooth animations
+1. Download or clone this repository.
+2. Open `index.html` in a modern browser.
+3. Play — no Node.js, npm, React, Vite, bundler, server, or installation is required.
 
-## Screenshots
+The game uses browser Canvas for its chart and Local Storage for saves. If browser storage is disabled, the simulation remains playable for the current session.
 
-> Add screenshots here after launching the app.
+## Gameplay
 
-## Installation
+- Four market events: Bull, Bear, Liquidity Raid and Black Swan
+- Five market zones with distinct multipliers
+- Three trader builds: Scalper, Swing Trader and Whale
+- Four analysts with memory-driven dialogue
+- Live price chart rendered with the Canvas API
+- Boss encounters, five achievements and dynamic endings
+- Autosave with validation and recovery from invalid save data
+- Responsive layout for desktop, tablet and mobile
 
-```bash
-npm install
-```
+## Technology
 
-## Development
+- `index.html` — semantic page structure
+- `styles.css` — responsive visual system, effects and motion
+- `game.js` — game state, market engine, rendering and persistence
 
-```bash
-npm run dev
-```
+No third-party JavaScript libraries are required. The optional Google Fonts import falls back to system fonts if the network is unavailable.
 
-Open the local Vite server in your browser to play.
+## GitHub Pages
 
-## Future Roadmap
+GitHub Actions copies only the three standalone runtime files into the Pages artifact. Pull requests run the packaging check without deploying; pushes to `main` deploy the site.
 
-- Add sound effects and ambient synth soundtrack
-- Expand market event variety and randomized scenarios
-- Improve AI trader memory logic and voiceovers
-- Add leaderboards and social sharing
-- Add in-game tutorial and achievements display panel
+## Legacy implementation
+
+The original React/Vite source remains under `src/` as a reference. It is not loaded by the standalone game.
+
+## Save compatibility
+
+The standalone edition uses the existing `market-god-engine-save` Local Storage key and understands the earlier save structure, so existing browser progress can be carried over when opened on the same origin.
 
 ## License
 
-MIT License
+MIT
