@@ -17,7 +17,7 @@ export function eventImpact(eventType, zoneMultiplier, buildId) {
   const event = baseImpact[eventType];
   const build = buildMultiplier(buildId);
   const price = Math.round(event.price * zoneMultiplier * build.risk);
-  const combo = Math.max(0, event.combo * build.speed);
+  const combo = Math.round(event.combo * build.speed);
   const score = Math.round(event.score * build.risk);
   return { price, combo, score };
 }
