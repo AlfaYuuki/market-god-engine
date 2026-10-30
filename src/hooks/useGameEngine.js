@@ -22,7 +22,7 @@ const ACHIEVEMENTS = [
   { id: 'Market God', condition: ({ score }) => score >= 10, description: 'You dominate the market.' },
   { id: 'Combo Master', condition: ({ combo }) => combo >= 12, description: 'A flawless streak.' },
   { id: 'Bull King', condition: ({ score }) => score >= 5, description: 'Riding the bull wave.' },
-  { id: 'Survivor', condition: ({ score }) => score >= 0, description: 'Still in control.' },
+  { id: 'Survivor', condition: ({ score }) => score > 0, description: 'Still in control.' },
   { id: 'Whale', condition: ({ buildId }) => buildId === 'Whale', description: 'Massive market power.' }
 ];
 
@@ -87,26 +87,35 @@ export function useGameEngine() {
   const [ending, setEnding] = useState(START_STATE.ending);
   const [traders, setTraders] = useState(START_STATE.traders);
   const [recentDelta, setRecentDelta] = useState(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const saved = loadGame();
-    if (saved) {
+    if (saved && Number.isFinite(saved.price) && Array.isArray(saved.history)) {
       const zone = zonesData.find((item) => item.id === saved.zoneId) ?? zonesData[0];
       const build = BUILDS.find((item) => item.id === saved.buildId) ?? BUILDS[1];
       setPrice(saved.price);
-      setCombo(saved.combo);
-      setScore(saved.score);
+      setCombo(Number.isFinite(saved.combo) ? saved.combo : START_STATE.combo);
+      setScore(Number.isFinite(saved.score) ? saved.score : START_STATE.score);
       setSelectedZone(zone);
       setSelectedBuild(build);
       setHistory(saved.history.length ? saved.history : START_STATE.history);
-      setUnlockedAchievements(saved.unlockedAchievements ?? []);
-      setActiveTraderIndex(saved.activeTraderIndex ?? 0);
+      setEventLog(Array.isArray(saved.eventLog) ? saved.eventLog : START_STATE.eventLog);
+      setUnlockedAchievements(Array.isArray(saved.unlockedAchievements) ? saved.unlockedAchievements : START_STATE.unlockedAchievements);
+      setActiveTraderIndex(Number.isInteger(saved.activeTraderIndex) ? ((saved.activeTraderIndex % START_STATE.traders.length) + START_STATE.traders.length) % START_STATE.traders.length : 0);
       setLeaderEvent(saved.leaderEvent ?? 'Bull');
-      setTraders(saved.traders?.length ? saved.traders : START_STATE.traders);
+      setTraders(START_STATE.traders.map((trader, index) => ({
+        ...trader,
+        memory: Array.isArray(saved.traders?.[index]?.memory)
+          ? saved.traders[index].memory.filter((event) => typeof event === 'string').slice(0, 5)
+          : []
+      })));
     }
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     saveGame({
       price,
       combo,
@@ -114,12 +123,13 @@ export function useGameEngine() {
       selectedZone,
       selectedBuild,
       history,
+      eventLog,
       unlockedAchievements,
       activeTraderIndex,
       leaderEvent,
       traders
     });
-  }, [price, combo, score, selectedZone, selectedBuild, history, unlockedAchievements, activeTraderIndex, leaderEvent, traders]);
+  }, [hydrated, price, combo, score, selectedZone, selectedBuild, history, eventLog, unlockedAchievements, activeTraderIndex, leaderEvent, traders]);
 
   useEffect(() => {
     if (!bossActive) return undefined;

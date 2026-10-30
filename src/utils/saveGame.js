@@ -4,7 +4,10 @@ export function loadGame() {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !Number.isFinite(parsed.price) || !Array.isArray(parsed.history)) return null;
+    return parsed;
   } catch (error) {
     return null;
   }
@@ -18,7 +21,16 @@ export function saveGame(state) {
     score: state.score,
     zoneId: state.selectedZone.id,
     buildId: state.selectedBuild.id,
-    history: state.history
+    history: state.history,
+    eventLog: state.eventLog ?? [],
+    unlockedAchievements: state.unlockedAchievements ?? [],
+    activeTraderIndex: state.activeTraderIndex ?? 0,
+    leaderEvent: state.leaderEvent ?? 'Bull',
+    traders: state.traders ?? []
   };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch (error) {
+    // Storage can be unavailable or full; the simulation should remain playable.
+  }
 }

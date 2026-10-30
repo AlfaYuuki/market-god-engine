@@ -1,6 +1,9 @@
 name: Deploy Market God Engine
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -28,7 +31,10 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install locked dependencies
+      - name: Synchronize dependency lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Install dependencies cleanly
         run: npm ci
 
       - name: Build production site
@@ -43,6 +49,7 @@ jobs:
           path: dist
 
   deploy:
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
