@@ -28,13 +28,13 @@
       <div class="hero-copy">
         <div class="eyebrow"><span class="eyebrow-line"></span> GLOBAL MARKET SIMULATOR</div>
         <h1>Own the <span>momentum.</span></h1>
-        <p>Read the pulse. Choose your market. Make your move. Every event changes the numbers — and your reputation.</p>
+        <p>The market never stands still. You are the trader: buy, sell, manage your cash and build your own portfolio.</p>
       </div>
       <div class="hero-orbit" aria-hidden="true">
         <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
         <div class="orbit-core"><span>MG</span></div><b class="orbit-dot dot-a"></b><b class="orbit-dot dot-b"></b>
       </div>
-      <div class="hero-footer"><span>SIMULATION MODE</span><span>BUILD 01.04 <b>•</b> LOCAL SESSION</span></div>
+      <div class="hero-footer"><span>LIVE SIMULATION</span><span>BUILD 01.04 <b>•</b> LOCAL SESSION</span></div>
     </section>
 
     <section class="leader-card panel" id="leader-card" aria-live="polite"></section>
@@ -44,9 +44,9 @@
         <section class="panel chart-panel">
           <div class="section-heading">
             <div><div class="eyebrow">MARKET TELEMETRY</div><h2>Live price movement</h2></div>
-            <span class="live-pill"><i></i> LIVE</span>
+            <span class="live-pill"><i></i> LIVE <b id="market-state">RUNNING</b></span>
           </div>
-          <div class="chart-meta"><span>ASSET INDEX <b>MGX / USD</b></span><span id="chart-range">LAST 20 PULSES</span></div>
+          <div class="chart-meta"><span>ASSET INDEX <b>MGX / USD</b></span><span id="chart-range">SIMULATED LIVE FEED · 1 SEC</span></div>
           <div class="chart-wrap"><canvas id="price-chart" aria-label="Market price history chart" role="img"></canvas><div class="chart-empty" id="chart-empty" hidden>Waiting for market activity…</div></div>
           <div class="chart-foot"><span><i class="legend-dot"></i> MARKET PRICE</span><span id="chart-last">INITIAL VALUE · $2,000</span></div>
         </section>
@@ -54,34 +54,51 @@
         <section class="stats-grid" aria-label="Market statistics">
           <article class="stat-card panel"><div class="stat-label">CURRENT PRICE <span>↗</span></div><div class="stat-value blue" id="price-value">$2,000</div><div class="stat-foot" id="price-foot">Market baseline</div></article>
           <article class="stat-card panel"><div class="stat-label">COMBO STREAK <span>⌁</span></div><div class="stat-value green" id="combo-value">0</div><div class="stat-foot" id="combo-foot">Build your momentum</div></article>
-          <article class="stat-card panel"><div class="stat-label">TOTAL SCORE <span>◈</span></div><div class="stat-value purple" id="score-value">0</div><div class="stat-foot" id="score-foot">No position yet</div></article>
+          <article class="stat-card panel"><div class="stat-label">PORTFOLIO VALUE <span>◈</span></div><div class="stat-value purple" id="equity-value">$100,000</div><div class="stat-foot" id="equity-foot">Starting capital</div></article>
         </section>
 
-        <section class="panel memory-panel">
-          <div class="section-heading"><div><div class="eyebrow">MARKET INTELLIGENCE</div><h2>Trader memory</h2></div><span class="subtle-label">ROTATING ANALYSTS</span></div>
-          <div id="trader-card"></div>
-          <div class="event-log-heading"><span>RECENT MARKET PULSES</span><span>MAX 5</span></div>
+        <section class="panel memory-panel player-panel">
+          <div class="section-heading"><div><div class="eyebrow">YOUR TRADING DESK</div><h2>Player profile</h2></div><span class="subtle-label">YOU ARE THE TRADER</span></div>
+          <div class="player-identity"><div class="player-avatar">♟</div><div class="player-name-wrap"><label for="player-name">TRADER NAME</label><input id="player-name" maxlength="22" value="Player" autocomplete="nickname"></div><span class="player-rank" id="player-rank">ROOKIE</span></div>
+          <div class="portfolio-grid">
+            <div class="portfolio-stat"><span>AVAILABLE CASH</span><strong id="cash-value">$100,000</strong></div>
+            <div class="portfolio-stat"><span>ASSET HOLDINGS</span><strong id="holdings-value">0.0000 MGX</strong></div>
+            <div class="portfolio-stat"><span>AVG. BUY PRICE</span><strong id="avg-price-value">—</strong></div>
+            <div class="portfolio-stat"><span>UNREALIZED P/L</span><strong id="unrealized-value">$0</strong></div>
+            <div class="portfolio-stat"><span>REALIZED P/L</span><strong id="realized-value">$0</strong></div>
+            <div class="portfolio-stat"><span>TOTAL EQUITY</span><strong id="net-worth-value">$100,000</strong></div>
+          </div>
+          <div class="event-log-heading"><span>YOUR TRADE JOURNAL</span><span>RECENT 6</span></div>
           <div class="event-log" id="event-log"></div>
         </section>
       </section>
 
       <aside class="side-column">
+        <section class="panel control-panel trade-panel">
+          <div class="section-heading"><div><div class="eyebrow">01 / YOUR ORDERS</div><h2>Execute a trade</h2></div><span class="step-number">TRADER</span></div>
+          <p class="panel-description">Place your own orders. Buy MGX with cash or sell assets you hold.</p>
+          <label class="trade-label" for="trade-quantity">ORDER SIZE <span>MGX UNITS</span></label>
+          <input class="trade-quantity" id="trade-quantity" type="number" min="0.0001" max="100000" step="0.0001" value="1">
+          <div class="trade-estimate" id="trade-estimate">Estimated order: $2,000</div>
+          <div class="trade-actions"><button class="trade-buy" id="buy-button" type="button">↗ BUY MGX</button><button class="trade-sell" id="sell-button" type="button">↘ SELL MGX</button></div>
+          <div class="trade-foot">Trading fee: 0.10% per order</div>
+        </section>
         <section class="panel control-panel">
-          <div class="section-heading"><div><div class="eyebrow">01 / GEOGRAPHY</div><h2>Market zone</h2></div><span class="step-number">01</span></div>
+          <div class="section-heading"><div><div class="eyebrow">02 / GEOGRAPHY</div><h2>Market zone</h2></div><span class="step-number">02</span></div>
           <p class="panel-description">Choose the exchange shaping your price impact.</p>
           <div class="choice-grid zones-grid" id="zone-options"></div>
         </section>
 
         <section class="panel control-panel">
-          <div class="section-heading"><div><div class="eyebrow">02 / STRATEGY</div><h2>Trader build</h2></div><span class="step-number">02</span></div>
+          <div class="section-heading"><div><div class="eyebrow">03 / STRATEGY</div><h2>Trading style</h2></div><span class="step-number">03</span></div>
           <p class="panel-description">Your build changes speed and risk exposure.</p>
           <div class="choice-grid builds-grid" id="build-options"></div>
         </section>
 
         <section class="panel control-panel event-panel">
-          <div class="section-heading"><div><div class="eyebrow">03 / EXECUTION</div><h2>Market events</h2></div><span class="step-number">03</span></div>
-          <p class="panel-description">Trigger a market pulse and watch the system react.</p>
-          <div class="event-buttons" id="event-options"></div>
+          <div class="section-heading"><div><div class="eyebrow">04 / MARKET NEWS</div><h2>Event controls</h2></div><span class="step-number">04</span></div>
+          <p class="panel-description">Market shocks can happen automatically. You can also inject a test event.</p>
+          <div class="event-buttons" id="event-options"></div><div class="simulation-controls"><button class="button button-quiet" id="pause-button" type="button">Ⅱ PAUSE MARKET</button><span id="tick-clock">TICK 0</span></div>
           <div class="risk-note"><span>⚡</span><p><strong>High volatility</strong><br>Liquidity Raid and Black Swan trigger special encounters.</p></div>
         </section>
 
@@ -91,7 +108,7 @@
         </section>
       </aside>
     </div>
-    <footer class="page-footer"><span>MARKET GOD ENGINE</span><span>STANDALONE EDITION · HTML / CSS / JAVASCRIPT</span><span>YOUR PROGRESS SAVES LOCALLY</span></footer>
+    <footer class="page-footer"><span>MARKET GOD ENGINE</span><span>STANDALONE EDITION · HTML / CSS / JAVASCRIPT</span><span>PLAYER TRADES & PROGRESS SAVE LOCALLY</span></footer>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
