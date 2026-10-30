@@ -25,6 +25,9 @@ jobs:
       - name: Validate standalone JavaScript
         run: node --check game.js
 
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Prepare standalone site
         run: |
           mkdir -p dist
