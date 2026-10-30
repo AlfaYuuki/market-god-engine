@@ -87,31 +87,30 @@ export function useGameEngine() {
   const [ending, setEnding] = useState(START_STATE.ending);
   const [traders, setTraders] = useState(START_STATE.traders);
   const [recentDelta, setRecentDelta] = useState(null);
-  const skipInitialSave = useRef(true);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const saved = loadGame();
-    if (saved) {
+    if (saved && Number.isFinite(saved.price) && Array.isArray(saved.history)) {
       const zone = zonesData.find((item) => item.id === saved.zoneId) ?? zonesData[0];
       const build = BUILDS.find((item) => item.id === saved.buildId) ?? BUILDS[1];
       setPrice(saved.price);
-      setCombo(saved.combo);
-      setScore(saved.score);
+      setCombo(Number.isFinite(saved.combo) ? saved.combo : START_STATE.combo);
+      setScore(Number.isFinite(saved.score) ? saved.score : START_STATE.score);
       setSelectedZone(zone);
       setSelectedBuild(build);
       setHistory(saved.history.length ? saved.history : START_STATE.history);
+      setEventLog(Array.isArray(saved.eventLog) ? saved.eventLog : START_STATE.eventLog);
       setUnlockedAchievements(saved.unlockedAchievements ?? []);
-      setActiveTraderIndex(saved.activeTraderIndex ?? 0);
+      setActiveTraderIndex(Number.isInteger(saved.activeTraderIndex) ? ((saved.activeTraderIndex % START_STATE.traders.length) + START_STATE.traders.length) % START_STATE.traders.length : 0);
       setLeaderEvent(saved.leaderEvent ?? 'Bull');
-      setTraders(saved.traders?.length ? saved.traders : START_STATE.traders);
+      setTraders(Array.isArray(saved.traders) && saved.traders.length === START_STATE.traders.length ? saved.traders : START_STATE.traders);
     }
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (skipInitialSave.current) {
-      skipInitialSave.current = false;
-      return;
-    }
+    if (!hydrated) return;
     saveGame({
       price,
       combo,
@@ -119,6 +118,7 @@ export function useGameEngine() {
       selectedZone,
       selectedBuild,
       history,
+      eventLog,
       unlockedAchievements,
       activeTraderIndex,
       leaderEvent,
@@ -126,7 +126,7 @@ export function useGameEngine() {
       unlockedAchievements,
       activeTraderIndex
     });
-  }, [price, combo, score, selectedZone, selectedBuild, history, unlockedAchievements, activeTraderIndex, leaderEvent, traders]);
+  }, [hydrated, price, combo, score, selectedZone, selectedBuild, history, eventLog, unlockedAchievements, activeTraderIndex, leaderEvent, traders]);
 
   useEffect(() => {
     if (!bossActive) return undefined;
